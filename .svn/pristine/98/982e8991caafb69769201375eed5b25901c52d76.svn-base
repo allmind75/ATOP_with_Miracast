@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Keyboard xmlns:android="http://schemas.android.com/apk/res/android"
+    android:horizontalGap="0px"
+    android:keyHeight="10%p"
+    android:keyWidth="10%p"
+    android:verticalGap="0px" >
+
+    <Row android:rowEdgeFlags="top" >
+        <Key
+            android:codes="207"
+            android:keyIcon="@drawable/ic_max_up" >
+        </Key>
+        <Key
+            android:codes="208"
+            android:keyIcon="@drawable/ic_min_down" >
+        </Key>
+    </Row>
+
+</Keyboard>

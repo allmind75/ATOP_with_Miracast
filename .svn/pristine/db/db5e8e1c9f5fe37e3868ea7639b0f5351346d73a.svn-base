@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Keyboard xmlns:android="http://schemas.android.com/apk/res/android"
+    android:keyHeight="10%p"
+    android:keyWidth="25%p"
+    android:verticalGap="5px" >
+
+    
+    <Row>
+        <Key
+            android:codes="250"
+             android:horizontalGap="10%p"
+            android:keyEdgeFlags="left"
+            android:keyLabel="되감기"
+            android:popupCharacters="되감기"
+            android:popupKeyboard="@xml/popup" />
+        <Key
+            android:codes="251"
+            android:horizontalGap="5%p"
+            android:keyLabel="빨리감기"
+            android:popupCharacters="빨리감기"
+            android:popupKeyboard="@xml/popup" />
+        <Key
+            android:codes="252"
+            android:horizontalGap="5%p"
+            android:keyLabel="종료"
+            android:popupCharacters="종료"
+            android:popupKeyboard="@xml/popup" />
+        <Key
+            android:horizontalGap="5%p"
+            android:keyEdgeFlags="right"
+            android:keyLabel=" "
+            android:keyWidth="0%p" />
+    </Row>
+    <Row>
+        <Key
+            android:codes="253"
+            android:horizontalGap="10%p"
+            android:keyEdgeFlags="left"
+            android:keyLabel="정지"
+            android:popupCharacters="정지"
+            android:popupKeyboard="@xml/popup" />
+        <Key
+            android:codes="254"
+            android:horizontalGap="5%p"
+            android:keyLabel="시작"
+            android:popupCharacters="시작"
+            android:popupKeyboard="@xml/popup" />
+        <Key
+            android:codes="255"
+            android:horizontalGap="5%p"
+            android:keyEdgeFlags="right"
+            android:keyLabel="일시정지"
+            android:popupCharacters="일시정지"
+            android:popupKeyboard="@xml/popup" />
+    </Row>
+
+</Keyboard>

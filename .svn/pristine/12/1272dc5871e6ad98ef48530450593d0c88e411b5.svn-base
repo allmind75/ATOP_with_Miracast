@@ -1,0 +1,73 @@
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--
+        Base application theme, dependent on API level. This theme is replaced
+        by AppBaseTheme from res/values-vXX/styles.xml on newer devices.
+    -->
+    <style name="AppBaseTheme" parent="android:Theme.Light">
+        <!--
+            Theme customizations available in newer API levels can go in
+            res/values-vXX/styles.xml, while customizations related to
+            backward-compatibility can go here.
+        -->
+    </style>
+
+    <!-- Application theme. -->
+    <style name="AppTheme" parent="AppBaseTheme">
+        <!-- All customizations that are NOT specific to a particular API-level can go here. -->
+
+    </style>
+
+    <style name="ButtonBarButton" parent="@android:style/Widget.Button.Small">
+        <item name="android:background">@android:color/holo_orange_light</item>
+        <item name="android:textColor">@android:color/primary_text_light</item>
+    </style>
+
+    <style name="ButtonBar" parent="@android:style/Holo.Light.ButtonBar.AlertDialog">
+        <item name="android:background">@android:color/holo_orange_dark</item>
+    </style>
+
+    <style name="Layout_mw">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+
+    <style name="Layout_ww">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+
+    <style name="Layout_mw_horizontal" parent="Layout_mw">
+        <item name="android:orientation">horizontal</item>
+    </style>
+
+    <style name="Layout_equalDivision_vertical">
+        <item name="android:orientation">vertical</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">0dp</item>
+        <item name="android:layout_weight">1</item>
+    </style>
+
+    <style name="Layout_equalDivision_horizontal">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+
+    <style name="Layout_subTitle_textView" parent="Layout_mw">
+        <item name="android:layout_margin">3dp</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <style name="Layout_myNodeName_textView" parent="Layout_subTitle_textView">
+        <item name="android:textColor">@android:color/white</item>
+    </style>
+
+    <style name="Layout_node_listView" parent="Layout_equalDivision_vertical">
+        <item name="android:layout_margin">3dp</item>
+        <item name="android:background">@drawable/stroke</item>
+        <item name="android:focusable">false</item>
+    </style>
+
+</resources>

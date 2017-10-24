@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/nodeListItem_layout"
+    style="@style/Layout_mw_horizontal"
+    android:layout_gravity="center_vertical"
+    android:paddingLeft="40dp" >
+
+    <TextView
+        android:id="@+id/nodeName_textview"
+        style="@style/Layout_equalDivision_horizontal"
+        android:gravity="center_vertical"
+        android:textColor="@android:color/black" />
+
+    <CheckBox
+        android:id="@+id/bSend_checkbox"
+        style="@style/Layout_ww"
+        android:checked="false"
+        android:focusable="false"
+        android:gravity="center_vertical" />
+
+</LinearLayout>

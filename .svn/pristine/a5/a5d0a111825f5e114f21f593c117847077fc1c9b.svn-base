@@ -1,0 +1,204 @@
+package com.atop.network;
+
+import java.io.BufferedOutputStream;
+import java.io.DataInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+
+import android.content.Context;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.util.Log;
+
+public class NetworkMedia extends Thread {
+	private final String TAG = "Class::NetworkMedia";
+
+	private Socket MediaSocket;
+
+	private String server_ip;
+	private static final int server_port = 2000;
+	private DataInputStream fileIm;
+
+	private String dirPath = "/sdcard/ATOP/Stream/"; // 파일이 저장 될 경로
+
+	private FileOutputStream fos;
+	private BufferedOutputStream bos;
+	private boolean socketConnect = false;
+
+	private byte[] fileNameByte; // 파일 이름 받아오는 바이트
+	private int fileNameSize; // 파일 이름의 바이트크기
+	private String fileName;
+	private long fileAllSize; // 파일 전체 크기
+	private String FILEBACK = "";
+	private Handler mhandler;
+	private static boolean isSeek = false; // seekbar를 사용했는지?
+	private static int TempCount = 0; // 다 받았는지
+
+	public NetworkMedia(String ip, Context context, Handler handler) {
+		this.server_ip = ip;
+		this.mhandler = handler;
+	}
+
+	public boolean istcpConnet() {
+		return socketConnect;
+	}
+
+	public void run() {
+
+		try {
+			MediaSocket = new Socket();
+			InetSocketAddress socketAddr = new InetSocketAddress(server_ip,
+					server_port);
+			MediaSocket.connect(socketAddr, 5000);
+
+			Log.e(TAG, "file new socket ");
+			socketConnect = true;
+			sendMessage("Open"); // 소켓이 열리는걸 서버에게 알림
+			fileIm = new DataInputStream(MediaSocket.getInputStream());
+
+			while (true) {
+				TempCount = 0;
+
+				fileNameByte = new byte[1024];
+				fileNameSize = fileIm.read(fileNameByte); // 파일 이름을 받음.
+				fileName = new String(fileNameByte, 0, fileNameSize, "UTF-8");
+				String[] subfileName = fileName.split("\\."); // 확장자확인
+
+				fileAllSize = Long.parseLong(subfileName[0]);
+				// FILEBACK = "."+subfileName[2]; // 이친구는 확장자 친구고
+				FILEBACK = ".mp4";
+				String time = subfileName[3];
+
+				Bundle b = new Bundle();
+				b.putInt("flag", 1);
+				b.putLong("filelen", fileAllSize);
+				b.putString("fileback", FILEBACK);
+				b.putString("alltime", time);
+				Message msg = mhandler.obtainMessage();
+				msg.setData(b);
+				mhandler.sendMessage(msg);
+				isSeek = true;
+
+				while (TempCount <= 20) {
+					sendMessage("Okay");
+					sendTemp_File();
+				}
+
+			}
+		} catch (IOException e) {
+			socketConnect = false;
+			Log.e(TAG, "Socket Connect Exception2 : " + e); // 소켓 IoException
+
+		} catch (Exception e) { // 소켓 Exception
+			socketConnect = false;
+			Log.e(TAG, "Exception : " + e);
+		} finally {
+			try {
+				exitMessage();
+				sendMessage("End" + "\r\n");
+				socketConnect = false;
+				MediaSocket.close();
+			} catch (IOException e) {
+				Log.e(TAG, "socket close : " + e);
+			}
+		}
+	} // end of run
+
+	public void sendTemp_File() {
+		try {
+			fileNameByte = new byte[2048];
+
+			fileNameSize = fileIm.read(fileNameByte); // 파일 이름을 받음.
+
+			fileName = new String(fileNameByte, 0, fileNameSize, "UTF-8");
+
+			String[] subfileName = fileName.split("/"); // 확장자확인
+
+			int tempsize = Integer.parseInt(subfileName[0]);
+			fileName = subfileName[1];
+
+			File receiveFile = new File(dirPath + fileName); // 진짜 파일
+			fos = new FileOutputStream(receiveFile);
+			bos = new BufferedOutputStream(fos); // 파일 생성
+
+			sendMessage("Ready"); // 파일 받을 준비가 됬음을 알림.
+
+			long len = 0;
+			int size = 7168;
+			byte[] data = new byte[size];
+			while (len != tempsize) { // len이 size보다 작고 seek바를 안움직였을때
+				Log.e("TAG", "Receive Media File " + "Len : " + len + " || "
+						+ "TempSize : " + tempsize);
+				if (!isSeek) {
+					isSeek = false;
+					return; // 이 함수를 끝내버림
+				}
+				int readSize = fileIm.read(data);
+				len = len + readSize;
+				bos.write(data, 0, readSize);
+				bos.flush();
+			}
+			bos.close();
+			fos.close(); // 파일닫기
+			TempCount++; // 파일의 갯수가 하나씩 증가함
+
+			if (TempCount == 1) {
+				Message msg = mhandler.obtainMessage();
+				Bundle b = new Bundle();
+				b.putInt("flag", 2);
+				msg.setData(b);
+				mhandler.sendMessage(msg);
+				Log.e(TAG, "socket 에서 보내는 vidoe start");
+			}
+			// 받은 파일 만큼 세컨드 퍼센트 증가
+			String[] str = fileName.split("\\.");
+			String num = str[0].substring(4, str[0].length());
+
+			Message msgg = mhandler.obtainMessage();
+			Bundle bb = new Bundle();
+			bb.putInt("flag", 3);
+			bb.putInt("savefile", Integer.parseInt(num));
+			msgg.setData(bb);
+			mhandler.sendMessage(msgg);
+
+		} catch (Exception e) {
+			Log.e(TAG, "err : " + e);
+		}
+	}
+
+	public void setSeek(boolean seek) {
+		this.isSeek = seek;
+	}
+
+	public void sendMessage(String message) {
+
+		try {
+			MediaSocket.getOutputStream().write(message.getBytes());
+		} catch (IOException e) {
+			Log.e(TAG, "패킷 전송 실패." + e);
+
+		}
+	}
+
+	public void exitMessage() {
+		TempCount = 100;
+		isSeek = true;
+	}
+
+	public void Close_Socket() {
+		try {
+			exitMessage();
+			socketConnect = false;
+			sendMessage("End" + "\r\n");
+			MediaSocket.close();
+		} catch (IOException e) {
+			Log.d(TAG, "Socket Close Failed");
+			e.printStackTrace();
+		}
+	}
+
+}

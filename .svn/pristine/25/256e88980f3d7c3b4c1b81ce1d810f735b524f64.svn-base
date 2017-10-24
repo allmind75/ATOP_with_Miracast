@@ -1,0 +1,153 @@
+package com.atop.main;
+
+import java.io.File;
+import java.io.FileDescriptor;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
+import android.app.Application;
+import android.content.Context;
+import android.content.res.AssetFileDescriptor;
+import android.graphics.Matrix;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
+import android.media.MediaPlayer.OnPreparedListener;
+import android.media.MediaPlayer.TrackInfo;
+import android.os.AsyncTask;
+import android.os.Environment;
+import android.os.StrictMode;
+import android.util.Log;
+import android.view.SurfaceHolder;
+import android.view.SurfaceHolder.Callback;
+import android.view.SurfaceView;
+
+public class VideoViewMain extends SurfaceView implements Callback {
+	private final String TAG = "Class::VideoView";
+	private SurfaceHolder mSurfaceHolder;
+	private SurfaceHolder mholder;
+	public static MediaPlayer mPlayer;
+	String path = "";
+	boolean isPlay = false;
+	int last = 0;
+
+	public VideoViewMain(Context context, String fileName) {
+		super(context);
+		mSurfaceHolder = getHolder();
+		mSurfaceHolder.addCallback(this);
+		this.path = "/sdcard/ATOP/" + fileName;
+	}
+
+	public void startVideo() {
+		try {
+			mPlayer.setOnCompletionListener(mComplete);
+			mPlayer.setDataSource(path);
+			mPlayer.setDisplay(mholder);
+			mPlayer.prepare();
+		} catch (Exception e) {
+			Log.e(TAG, "file err : " + e);
+			// e.printStackTrace();
+		}
+		mPlayer.start();
+		isPlay = true;
+	}
+
+	public void stopVideo() {
+		mPlayer.stop();
+	}
+
+	public void pauseVideo() {
+		mPlayer.pause();
+	}
+
+	@Override
+	public void surfaceCreated(SurfaceHolder holder) {
+		if (mPlayer == null)
+			mPlayer = new MediaPlayer();
+		else
+			mPlayer.reset();
+		this.mholder = holder;
+	}
+
+	MediaPlayer.OnCompletionListener mComplete = new MediaPlayer.OnCompletionListener() {
+		@Override
+		public void onCompletion(MediaPlayer mp) {
+			if(isPlay){
+				last = mPlayer.getCurrentPosition();
+				isPlay =false;
+				mPlayer.release();
+				mPlayer = new MediaPlayer();
+				try {
+					mPlayer.setOnCompletionListener(mComplete);
+					mPlayer.setOnPreparedListener(mPre);
+					mPlayer.setOnSeekCompleteListener(mSeek);
+					mPlayer.setDataSource(path);
+					mPlayer.setDisplay(mholder);
+					mPlayer.prepareAsync();
+				} catch (Exception e) {
+					Log.e(TAG, "file err : " + e);
+					// e.printStackTrace();
+				}
+				
+			}
+			
+			
+
+		}
+	};
+
+	MediaPlayer.OnPreparedListener mPre = new MediaPlayer.OnPreparedListener() {
+
+		@Override
+		public void onPrepared(MediaPlayer mp) {
+			Log.d(TAG, "onPrepared called");
+			mPlayer.start();
+			mPlayer.pause();
+			mPlayer.seekTo(last);
+		}
+
+	};
+	
+	MediaPlayer.OnSeekCompleteListener mSeek = new MediaPlayer.OnSeekCompleteListener() {
+		
+		@Override
+		public void onSeekComplete(MediaPlayer arg0) {
+			if(mPlayer.getCurrentPosition() != last){
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				mPlayer.seekTo(last);
+			}else{
+				isPlay = true;
+			}
+			
+		}
+	};
+
+	MediaPlayer.OnErrorListener mErr = new MediaPlayer.OnErrorListener() {
+
+		@Override
+		public boolean onError(MediaPlayer arg0, int arg1, int arg2) {
+			Log.e(TAG, "err");
+			return false;
+		}
+	};
+
+	@Override
+	public void surfaceChanged(SurfaceHolder holder, int format, int width,
+			int height) {
+	}
+
+	@Override
+	public void surfaceDestroyed(SurfaceHolder holder) {
+
+		if (mPlayer != null) {
+			mPlayer.release();
+		}
+	}
+
+}

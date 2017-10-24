@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Keyboard xmlns:android="http://schemas.android.com/apk/res/android"
+    android:keyHeight="8.5%p"
+    android:keyWidth="16.5%p"
+    android:verticalGap="5px" >
+
+    <Row>
+        <Key
+            android:codes="176"
+            android:keyLabel="Alt" />
+        <Key
+            android:codes="174"
+            android:keyIcon="@drawable/ic_windos" />
+        <Key
+            android:codes="175"
+            android:keyLabel="한자" />
+        <Key
+            android:codes="173"
+            android:keyIcon="@drawable/ic_tab" />
+        <Key
+            android:codes="177"
+            android:keyLabel="Delete" />
+        <Key
+            android:codes="178"
+            android:keyLabel="Insert" />
+    </Row>
+    <Row>
+        <Key
+            android:codes="186"
+            android:keyIcon="@drawable/ic_win_d" />
+        <Key
+            android:codes="187"
+            android:keyIcon="@drawable/ic_run_slope" />
+        <Key
+            android:codes="165"
+            android:keyIcon="@drawable/ic_refresh" />
+        <Key
+            android:codes="189"
+            android:keyIcon="@drawable/ic_select_addr" />
+        <Key
+            android:codes="188"
+            android:keyIcon="@drawable/ic_exit" />
+        <Key
+            android:codes="190"
+            android:keyIcon="@drawable/ic_control"
+            android:popupKeyboard="@xml/popup_control" />
+        
+        <Key
+            android:horizontalGap="1%p"
+            android:keyEdgeFlags="right"
+            android:keyLabel=" "
+            android:keyWidth="0%p" />
+
+    </Row>
+    <Row>
+        <Key
+            android:codes="194"
+            android:keyIcon="@drawable/ic_alt_tab" />
+        <Key
+            android:codes="195"
+            android:keyIcon="@drawable/ic_save" />
+        <Key
+            android:codes="196"
+            android:keyIcon="@drawable/ic_ctrl_a" />
+        <Key
+            android:codes="197"
+            android:keyIcon="@drawable/ic_undo" />
+        <Key
+            android:codes="198"
+            android:keyIcon="@drawable/ic_search" />
+        <Key
+            android:codes="199"
+            android:keyLabel="ESC" />
+    </Row>
+    <Row>
+        <Key
+            android:codes="200"
+            android:keyIcon="@drawable/ic_block"
+            android:popupKeyboard="@xml/popup_word" />
+        <Key
+            android:codes="203"
+            android:keyLabel="Page"
+            android:popupKeyboard="@xml/popup_page" />
+        <Key
+            android:codes="206"
+            android:keyIcon="@drawable/ic_up_down"
+            android:popupKeyboard="@xml/popup_updown" />
+        <Key
+            android:codes="209"
+            android:keyIcon="@drawable/ic_window_lr"
+            android:popupKeyboard="@xml/popup_sort" />
+        <Key
+            android:codes="212"
+            android:keyIcon="@drawable/ic_work_control" />
+        <Key
+            android:codes="300"
+              android:keyIcon="@drawable/ic_right"  />
+    </Row>
+
+</Keyboard>

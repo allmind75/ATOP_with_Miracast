@@ -1,0 +1,206 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/main_background2"
+    android:orientation="vertical" >
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="90"
+        android:gravity="center"
+        android:orientation="vertical" >
+
+        <HorizontalScrollView
+            android:id="@+id/horizontalScrollView1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="20dp" >
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal" >
+                
+                <Button
+                    android:id="@+id/btn_layout6"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:drawableTop="@drawable/layout_6"
+                    android:padding="6dp"
+                    android:text="Miarcast 연결"
+                    android:textColor="#ffffff"
+                    android:textSize="20dp"
+                    android:textStyle="bold"
+                    android:typeface="monospace" />
+
+                <Button
+                    android:id="@+id/btn_layout1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:drawableTop="@drawable/layout_1"
+                    android:padding="6dp"
+                    android:text="1대 연결"
+                    android:textColor="#ffffff"
+                    android:textSize="20dp"
+                    android:textStyle="bold"
+                    android:typeface="monospace" />
+
+                <Button
+                    android:id="@+id/btn_layout2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:drawableTop="@drawable/layout_2"
+                    android:padding="6dp"
+                    android:text="2대 연결(가로)"
+                    android:textColor="#ffffff"
+                    android:textSize="20dp"
+                    android:textStyle="bold"
+                    android:typeface="monospace" />
+
+                <Button
+                    android:id="@+id/btn_layout3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:drawableTop="@drawable/layout_3"
+                    android:padding="6dp"
+                    android:text="2대 연결(세로)"
+                    android:textColor="#ffffff"
+                    android:textSize="20dp"
+                    android:textStyle="bold"
+                    android:typeface="monospace" />
+
+                <Button
+                    android:id="@+id/btn_layout4"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:drawableTop="@drawable/layout_4"
+                    android:padding="6dp"
+                    android:text="3대 연결(가로)"
+                    android:textColor="#ffffff"
+                    android:textSize="20dp"
+                    android:textStyle="bold"
+                    android:typeface="monospace" />
+
+                <Button
+                    android:id="@+id/btn_layout5"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:drawableTop="@drawable/layout_5"
+                    android:padding="6dp"
+                    android:text="3대 연결(세로)"
+                    android:textColor="#ffffff"
+                    android:textSize="20dp"
+                    android:textStyle="bold"
+                    android:typeface="monospace" />
+
+
+                
+            </LinearLayout>
+        </HorizontalScrollView>
+
+    </LinearLayout>
+    
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:src="@drawable/white_line" />
+  
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginTop="10dp"
+        android:layout_weight="50"
+        android:background="#8FA7E7"
+        android:gravity="center"
+        android:orientation="vertical" >
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="5dp"
+            android:layout_marginTop="5dp"
+            android:orientation="horizontal" >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="left"
+                android:paddingLeft="10dp"
+                android:text="IP : "
+                android:textSize="20dp"
+                android:textStyle="bold"
+                android:typeface="monospace"
+                android:textColor="#ffffff" />                    
+                    
+            <EditText
+                android:id="@+id/edittext_ip"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="4"
+                android:gravity="center"
+                android:hint="255.255.255.255"
+                android:inputType="text"
+                android:maxLength="16"
+                android:textSize="20dp"
+                android:textColor="#ffffff" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:orientation="horizontal" >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="left"
+                android:paddingLeft="10dp"
+                android:text="PW : "
+                android:textSize="20dp"
+                android:textStyle="bold"
+                android:typeface="monospace"
+                android:textColor="#ffffff" />
+
+            <EditText
+                android:id="@+id/edittext_password"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="4"
+                android:gravity="center"
+                android:hint="****"
+                android:inputType="text"
+                android:maxLength="20"
+                android:password="true"
+                android:textSize="20dp"
+                android:textColor="#ffffff" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btn_server_login"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="LOGIN"
+            android:textColor="#ffffff"
+            android:textStyle="bold"
+            android:typeface="monospace"
+            android:background="#2A4DAB" />
+    </LinearLayout>
+
+</LinearLayout>

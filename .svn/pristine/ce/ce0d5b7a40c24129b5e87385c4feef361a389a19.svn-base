@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+  <string name="app_name">ATOP</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="title_activity_surface_view">SurfaceViewActivity</string>
+    <string name="title_activity_spot">SpotActivity</string>
+    <string name="title_activity_han_keyboard">HanKeyboard</string>
+    <string name="title_activity_mouse">Mouse</string>
+    <string name="title_activity_loading">Loading</string>
+    <string name="start">Start</string>
+    <string name="stop">Stop</string>
+    <string name="send">Send</string>
+    <string name="spot">Spot</string>
+    <string name="setting">Setting</string>
+    <string name="accept">수락</string>
+    <string name="reject">거절</string>
+    <string name="join_channel">Join Channel</string>
+
+    <color name="back_color">#FFFFFFFF</color>
+
+    <string name="title_activity_spacial_keyboard">SpacialKeyboard</string>
+    <string name="title_activity_combine_km">CombineKMActivity</string>
+    <string name="title_activity_wol">WOL</string>
+    <string name="title_activity_setting">SETTING</string>
+    <string name="title_activity_select_mode">SelectModeActivity</string>
+    <string name="title_activity_select_layout">SelectLayoutActivity</string>
+    <string name="title_activity_connect_server">LOGIN</string>
+    <string name="title_activity_sendFile">SendFile</string>
+    <string name="title_activity_fileSelect">FileSelect</string>
+    <string name="choose_the_api_for_sending">Choose the API for sending</string>
+    <string name="set_max_num_of_files_sent_simultaneously">The maximum number of files that can be sent simultaneously</string>
+    <string name="my_node_name">My Node Name [%s]</string>
+    <string name="joined_node_list">Joined Node List [ %s ]</string>
+    <string name="sending_ps_failed">Sending %s failed</string>
+    <string name="from_ps_file_ps">Receive %2$s from %1$s?</string>
+    <string name="file_ps_total_pd">%1$s(Total:%2$d files)</string>
+    <string name="title_activity_file">FileActivity</string>
+    <string name="title_activity_secondary_display">SecondaryDisplayActivity</string>
+    <string name="title_activity_midea_test">MideaTest</string>
+    <string name="title_activity_mediatest">Mediatest</string>
+    <string name="title_activity_test">Test</string>
+
+</resources>

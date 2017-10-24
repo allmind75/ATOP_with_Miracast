@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Keyboard xmlns:android="http://schemas.android.com/apk/res/android"
+    android:keyHeight="8.5%p"
+    android:keyWidth="20%p"
+    android:verticalGap="5px" >
+
+    <Row>
+        <Key
+            android:codes="161"
+            android:keyEdgeFlags="left"
+            android:keyLabel="F1" />
+        <Key
+            android:codes="162"
+            android:keyLabel="F2" />
+        <Key
+            android:codes="163"
+            android:keyLabel="F3" />
+        <Key
+            android:codes="164"
+            android:keyLabel="F4" />
+        <Key
+            android:codes="165"
+            android:keyEdgeFlags="right"
+            android:keyLabel="F5" />
+    </Row>
+    <Row>
+        <Key
+            android:codes="166"
+            android:keyEdgeFlags="left"
+            android:keyLabel="F6" />
+        <Key
+            android:codes="167"
+            android:keyLabel="F7" />
+        <Key
+            android:codes="168"
+            android:keyLabel="F8" />
+        <Key
+            android:codes="169"
+            android:keyLabel="F9" />
+        <Key
+            android:codes="170"
+            android:keyEdgeFlags="right"
+            android:keyLabel="F10" />
+    </Row>
+    <Row>
+        <Key
+            android:codes="171"
+            android:keyEdgeFlags="left"
+            android:keyLabel="F11" />
+        <Key
+            android:codes="172"
+            android:keyLabel="F12" />
+        <Key
+            android:codes="179"
+            android:keyLabel="Home" />
+        <Key
+            android:codes="180"
+            android:keyLabel="End" />
+        <Key
+            android:codes="185"
+            android:keyEdgeFlags="right"
+            android:keyLabel="Pause" />
+    </Row>
+    <Row>
+        <Key
+            android:codes="181"
+            android:keyEdgeFlags="left"
+            android:keyLabel="PgUp" />
+        <Key
+            android:codes="182"
+            android:keyLabel="PgDn" />
+        <Key
+            android:codes="184"
+            android:keyLabel="ScrLk" />
+        <Key
+            android:codes="183"
+            android:keyLabel="PrtSc" />
+        <Key
+            android:codes="300"
+            android:keyEdgeFlags="right"
+            android:keyIcon="@drawable/ic_left" />
+    </Row>
+
+</Keyboard>

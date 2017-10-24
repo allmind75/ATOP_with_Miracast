@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Keyboard xmlns:android="http://schemas.android.com/apk/res/android"
+    android:horizontalGap="0px"
+    android:keyHeight="10%p"
+    android:keyWidth="10%p"
+    android:verticalGap="0px" >
+
+    <Row android:rowEdgeFlags="top" >
+        <Key
+            android:codes="191"
+             android:keyIcon="@drawable/ic_size_min" >
+        </Key>
+        <Key
+            android:codes="192"
+            android:keyIcon="@drawable/ic_rectangle" >
+        </Key>
+        <Key
+            android:codes="193"
+            android:keyIcon="@drawable/ic_size_control" >
+        </Key>
+    </Row>
+
+</Keyboard>

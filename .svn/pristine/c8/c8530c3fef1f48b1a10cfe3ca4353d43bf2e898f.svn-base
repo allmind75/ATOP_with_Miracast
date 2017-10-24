@@ -1,0 +1,974 @@
+package com.atop.keyboard;
+
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.util.Date;
+
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.app.FragmentTransaction;
+import android.app.Presentation;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnDismissListener;
+import android.content.SharedPreferences;
+import android.content.res.Resources;
+import android.graphics.Color;
+import android.hardware.display.DisplayManager;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.os.StrictMode;
+import android.os.Vibrator;
+import android.util.FloatMath;
+import android.util.Log;
+import android.util.SparseArray;
+import android.view.Display;
+import android.view.KeyEvent;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.ViewGroup.LayoutParams;
+import android.view.Window;
+import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.ImageButton;
+
+import com.atop.callstate.CallStateReceiver;
+import com.atop.chord.ChordFragment;
+import com.atop.dialog.SettingDialog;
+import com.atop.main.MyApplication;
+import com.atop.main.SurfaceViewMain;
+import com.atop.main.VideoViewMain;
+import com.atop.network.NetworkMedia;
+import com.atop.network.NetworkTCP;
+import com.atop.network.NetworkTCP_Image;
+import com.atop.network.NetworkTCP_Image_two;
+import com.atop.network.NetworkSound;
+import com.example.ssm_test.R;
+
+public class KeyboardMouseActivity extends Activity implements OnClickListener {
+
+	private final String TAG = "Class::CombinKM";
+	private final String ProtocalFN = "Ư";
+	private int udp_Mouse_Port = 9000;
+
+	private Button btn_FN, btn_copy, btn_paste, btn_shift, btn_ctrl;
+
+	private ImageButton btn_Keyboard, btn_up, btn_down, btn_left, btn_right,
+			btn_right_click, btn_left_click;
+
+	private CustomKeyboard mCustomKeyboard;
+
+	private View view_Touch; //마우스 뷰
+
+	private NetworkTCP tcp;
+	private NetworkSound soundNetwork;
+	private NetworkTCP_Image tcp_image;
+	private NetworkTCP_Image_two tcp_image_two;
+	private boolean isKtcp = false; // 키보드 시작되었는지 확인
+	private boolean isFN = false;
+	private boolean isShift = false; // 쉬프트가 눌러졌는지 확인
+	private boolean isCtrl = false; // 컨트롤이 눌러졌는지 확인
+	private boolean isLong = false;
+
+	private Vibrator vibe; // 버튼 진동 사용
+
+	private DatagramSocket mouse_udpsocket; // 마우스 좌표 Socket
+	private DatagramPacket mouse_udppacket;
+
+	private float lastX;
+	private float lastY;
+	private float firstX;
+	private float firstY;
+	private Date clickDown;
+	private Date now;
+	private Date oneClick;
+	private Date twoClick;
+	private final int[] tolerance = { 10, -10 };
+
+	private MyApplication myApp;
+
+	private float oldDist = 1f; // zoom-in 과 zoom-out 비교
+	private float newDist = 1f;
+
+	private static final int NONE = 0; // 마우스 상태
+	private static final int DRAG = 1;
+	private static final int ZOOM = 2;
+
+	private int mode = NONE;
+	private int DeviceNum = 1;
+	private int dClick = 0;
+
+	private ChordFragment mChord;
+	private CallStateReceiver callStateReceiver;
+	private String settingState;
+	private SharedPreferences mainPref;
+	private SettingDialog settingdialog;
+	private FragmentTransaction mFragmentTransaction;
+	private boolean is_Socket_connect = false; // 소켓 연결 확인
+
+	// Secondary Display
+
+	private DisplayManager mDisplayManager;
+	private final SparseArray<RemotePresentation> mActivePresentations = new SparseArray<RemotePresentation>();
+	private SurfaceViewMain mSurfaceViewMain;
+
+	// file
+	private VideoViewMain mVideoViewMain;
+	RemotePresentation presentation;
+
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		StrictMode.enableDefaults();
+		super.onCreate(savedInstanceState);
+		requestWindowFeature(Window.FEATURE_NO_TITLE);
+		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+		setContentView(R.layout.activity_combine_km);
+
+		
+		
+		// Secondary
+		mDisplayManager = (DisplayManager) getSystemService(Context.DISPLAY_SERVICE);
+		mSurfaceViewMain = new SurfaceViewMain(KeyboardMouseActivity.this);
+		
+//		mVideoViewMain = new VideoViewMain(KeyboardMouseActivity.this,
+//				"temp.avi");
+
+		// 연결된 미라캐스트로 Secondary 화면 전송
+		Display[] presentationDisplays = mDisplayManager
+				.getDisplays((DisplayManager.DISPLAY_CATEGORY_PRESENTATION));
+		if (presentationDisplays.length > 0) {
+			Display display = presentationDisplays[0];
+			showPresentation(display);
+		}
+
+		try {
+			this.mouse_udpsocket = new DatagramSocket(udp_Mouse_Port);
+		} catch (Throwable e) {
+			e.printStackTrace();
+		}
+
+		vibe = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+
+		myApp = (MyApplication) getApplication();
+		tcp = myApp.getTCP();
+
+		sendDeviceNum();
+
+		mChord = myApp.getChord();
+		DeviceNum = myApp.getDeviceNum(); // Layout Number
+		mChord.setPhoneNumber(DeviceNum);
+
+		mFragmentTransaction = getFragmentManager().beginTransaction();
+		mFragmentTransaction.replace(R.id.ConnectServerFragment, mChord);
+		mFragmentTransaction.addToBackStack(null);
+		mFragmentTransaction.commit();
+
+		// media test
+		NetworkMedia media = new NetworkMedia(myApp.getIP(),
+				KeyboardMouseActivity.this, video_handler);
+		media.start();
+
+		tcp_image = new NetworkTCP_Image(mChord, mSurfaceViewMain,
+				myApp.getIP(),DeviceNum);
+		tcp_image.start();
+		tcp_image_two = new NetworkTCP_Image_two(mChord, mSurfaceViewMain,
+				myApp.getIP(), DeviceNum);
+		tcp_image_two.start();
+
+		soundNetwork = new NetworkSound(myApp.getIP());
+		soundNetwork.start();
+
+		myApp.setImageTCP(tcp_image);
+
+		is_Socket_connect = true;
+
+		boolean isnotcall = myApp.getCall();
+		callStateReceiver = new CallStateReceiver();
+		if (!isnotcall) {
+			callStateReceiver.CallState(isnotcall);
+		}
+
+		mCustomKeyboard = (CustomKeyboard) findViewById(R.id.custom_keyboardview);
+		mCustomKeyboard.setTCP(tcp);
+
+		setBasisButton();
+		setViewtouch();
+
+	}
+
+	Handler video_handler = new Handler() {
+
+		public void handleMessage(Message msg) {
+			Log.e(TAG, "키보드 뷰에서 보내는 vidoe start");
+			startVideo();
+		}
+	};
+
+	public void sendDeviceNum() {
+
+		if (myApp.getDeviceNum() == 1 || myApp.getDeviceNum() == 2
+				|| myApp.getDeviceNum() == 4) {
+			tcp.sendMessage(ProtocalFN + "Rotate" + "\r\n");
+			
+		} else if(myApp.getDeviceNum() == 6	) {
+			tcp.sendMessage(ProtocalFN + "Second" + "\r\n");
+			
+		} else {		
+			tcp.sendMessage(ProtocalFN + "Original" + "\r\n");
+			
+		}
+	}
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		menu.add(0, 1, 0, "환경설정");
+		menu.add(0, 2, 0, "FN 도움말");
+		return true;
+
+	}
+
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case 1: {
+			settingMenu();
+			break;
+		}
+		case 2: {
+			Dialog helpdialog = new Dialog(this);
+			helpdialog.getWindow().requestFeature(Window.FEATURE_NO_TITLE);
+			helpdialog.setContentView(getLayoutInflater().inflate(
+					R.layout.dialog_help, null));
+			helpdialog.show();
+			break;
+		}
+		}
+		return true;
+
+	}
+
+	@Override
+	protected void onStop() {
+		super.onStop();
+	}
+
+	@Override
+	protected void onRestart() {
+		super.onRestart();
+		boolean isnotcall = myApp.getCall();
+		callStateReceiver = new CallStateReceiver();
+		if (!isnotcall) {
+			callStateReceiver.CallState(isnotcall);
+		}
+	}
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+
+		// mDisplayManager.unregisterDisplayListener(mDisplayManager);
+		// for(int i = 0; i< mActivePresentations.size(); i++) {
+		// Demopresentation prsentation = mActivePresentations.valueAt(i);
+		// int displayId = mActivePresentations.keyAt(i);
+		//
+		// }
+	}
+
+	private void settingMenu() {
+
+		mainPref = getSharedPreferences("mainpref", 0);
+
+		settingState = mainPref.getString("setting", null);
+		boolean saveCall = false;
+
+		if (settingState != null) {
+			saveCall = mainPref.getBoolean("call", true); // 전화 사용가능 상태 받아오기
+															
+		}
+		settingdialog = new SettingDialog(KeyboardMouseActivity.this, saveCall,
+				myApp.getDeviceNum());
+		settingdialog.setOnDismissListener(new OnDismissListener() {
+
+			@Override
+			public void onDismiss(DialogInterface dialog) { // 환경설정 끝나고 설정된 정보 저장
+	
+				settingRetrunCall(settingdialog.getcall());
+				myApp.setDeviceNum(settingdialog.getNum());
+				mChord.setPhoneNumber(settingdialog.getNum());
+
+				sendDeviceNum();
+			}
+		});
+		settingdialog.show();
+	}
+
+	public void settingRetrunCall(boolean call) { // 저장 되어 있는 전화에 대한 환경설정을 바꿈
+		SharedPreferences.Editor editor = mainPref.edit();
+		editor.putString("setting", "ok");
+		editor.putBoolean("call", call);
+		editor.commit();
+		callStateReceiver.CallState(call);
+		myApp.setCall(call);
+	}
+
+	Handler mHandler = new Handler() {
+		String str;
+
+		public void handleMessage(Message msg) {
+			if (msg.obj != null)
+				str = msg.obj.toString() + "\r\n";
+			tcp.sendMessage(ProtocalFN + str);
+			mHandler.sendEmptyMessageDelayed(0, 100); // long click
+		}
+
+	};
+
+	Handler scrollHandler = new Handler() {
+		String str;
+
+		public void handleMessage(Message msg) {
+			if (msg.obj != null)
+				str = msg.obj.toString() + "\r\n";
+			tcp.sendMessage(ProtocalFN + str);
+			scrollHandler.sendEmptyMessageDelayed(0, 200); // long click
+		}
+
+	};
+
+	private void setViewtouch() {
+
+		view_Touch = (View) findViewById(R.id.view_touch);
+		view_Touch.setOnTouchListener(new View.OnTouchListener() {
+
+			@SuppressWarnings("deprecation")
+			@Override
+			public boolean onTouch(View v, MotionEvent event) {
+
+				int action = event.getAction();
+				switch (action & MotionEvent.ACTION_MASK) {
+				case MotionEvent.ACTION_DOWN: { // 첫번째 터치
+
+					final float x = event.getX();
+					final float y = event.getY();
+					Log.e(TAG, "first " + x + " : " + y);
+
+					lastX = x;
+					lastY = y;
+
+					firstX = x;
+					firstY = y;
+
+					mode = DRAG;
+					clickDown = new Date();
+					break;
+				}
+				case MotionEvent.ACTION_MOVE: {
+
+					if (mode == DRAG) {
+
+						final float x1 = event.getX();
+						final float y1 = event.getY();
+
+						final float deltax1 = (x1 - lastX) / 2;
+						final float deltay1 = (y1 - lastY) / 2;
+
+						lastX = x1;
+						lastY = y1;
+
+						try {
+
+							byte[] message = ("drag/" + deltax1 + "," + deltay1)
+									.getBytes("UTF-8");
+
+							mouse_udppacket = new DatagramPacket(message,
+									message.length, InetAddress.getByName(myApp
+											.getIP()), udp_Mouse_Port);
+
+							mouse_udpsocket.send(mouse_udppacket);
+							Thread.sleep(10);
+
+						} catch (Throwable e) {
+							Log.e(TAG, "not send :   " + e);
+						}
+
+					} else if (mode == ZOOM) {
+
+						newDist = spacing(event);
+
+						if (newDist - oldDist > 20) { // 줌인
+
+							tcp.sendMessage(ProtocalFN + "zoom_in" + "\r\n");
+
+							try {
+								Thread.sleep(200);
+							} catch (InterruptedException e) {
+
+								e.printStackTrace();
+							}
+							oldDist = newDist;
+
+						} else if (oldDist - newDist > 20) { // 줌 아웃
+
+							tcp.sendMessage(ProtocalFN + "zoom_out" + "\r\n");
+							try {
+								Thread.sleep(200);
+							} catch (InterruptedException e) {
+
+								e.printStackTrace();
+							}
+							oldDist = newDist;
+
+						}
+
+					}
+
+					break;
+				}
+
+				case MotionEvent.ACTION_UP: {
+
+					final float x2 = event.getX();
+					final float y2 = event.getY();
+
+					final float deltaX = firstX - x2;
+					final float deltaY = firstY - y2;
+
+					now = new Date();
+
+					byte[] sendClick = null;
+					try {
+						if (deltaX < tolerance[0] && deltaX > tolerance[1]
+								&& deltaY < tolerance[0]
+								&& deltaY > tolerance[1]
+								&& now.getTime() - clickDown.getTime() >= 1000) {
+							sendClick = ("d.click").getBytes("UTF-8");
+
+						} else if (x2 == firstX && y2 == firstY) {
+							sendClick = ("click").getBytes("UTF-8");
+
+						}
+
+						if (sendClick != null) {
+							mouse_udppacket = new DatagramPacket(sendClick,
+									sendClick.length, InetAddress
+											.getByName(myApp.getIP()),
+									udp_Mouse_Port);
+
+							mouse_udpsocket.send(mouse_udppacket);
+
+						}
+					} catch (Throwable e) {
+						e.printStackTrace();
+					}
+					break;
+				}
+				case MotionEvent.ACTION_POINTER_UP: {
+					Log.e(TAG, "action pointer up");
+					mode = NONE;
+					break;
+				}
+
+				case MotionEvent.ACTION_POINTER_DOWN: {
+
+					final float x3 = event.getX();
+					final float y3 = event.getY();
+					mode = ZOOM;
+
+					newDist = spacing(event);
+					oldDist = spacing(event);
+
+					break;
+
+				}
+				case MotionEvent.ACTION_CANCEL:
+				default:
+					break;
+				}
+				return true;
+			}
+		});
+
+	}
+
+	private float spacing(MotionEvent event) {
+		float x = event.getX(0) - event.getX(1);
+		float y = event.getY(0) - event.getY(1);
+		return FloatMath.sqrt(x * x + y * y);
+
+	}
+
+	private void goneCustomKeyboard() { // 키보드 해제
+		mCustomKeyboard.setVisibility(View.GONE);
+		isKtcp = false;
+		isFN = false;
+
+	}
+
+	private void visibleHanCustomKeyboard() { // 한글 키보드 보이기
+		mCustomKeyboard
+				.setActionListenerHanKeyboard(KeyboardMouseActivity.this);
+		mCustomKeyboard.setVisibility(View.VISIBLE);
+		isKtcp = true;
+
+	}
+
+	private void visibleFNCustomKeyboard() { // 기호 키보드 보이기
+		mCustomKeyboard
+				.setActionListenerFN_1Keyboard(KeyboardMouseActivity.this);
+		mCustomKeyboard.setVisibility(View.VISIBLE);
+		isFN = true;
+
+	}
+
+	private void setBasisButton() {
+
+		btn_Keyboard = (ImageButton) findViewById(R.id.keyboard_show);
+		btn_Keyboard.setOnClickListener(new View.OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				vibe.vibrate(15);
+				if (isKtcp) {
+					goneCustomKeyboard();
+					isKtcp = false;
+				} else {
+					visibleHanCustomKeyboard();
+					if (isFN) {
+
+						btn_FN.setTextColor(Color.WHITE);
+						isFN = false;
+					}
+					isKtcp = true;
+				}
+
+			}
+		});
+
+		btn_FN = (Button) findViewById(R.id.keyboard_FN);
+		btn_FN.setOnClickListener(new View.OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				vibe.vibrate(15);
+				if (isFN) {
+
+					btn_FN.setTextColor(Color.WHITE);
+					goneCustomKeyboard();
+					isFN = false;
+				} else {
+					if (isKtcp) {
+						isKtcp = false;
+					}
+					btn_FN.setTextColor(Color.RED);
+					visibleFNCustomKeyboard();
+					isFN = true;
+				}
+			}
+		});
+
+		btn_copy = (Button) findViewById(R.id.keyboard_Copy);
+		btn_copy.setOnClickListener(this);
+
+		btn_paste = (Button) findViewById(R.id.keyboard_Paste);
+		btn_paste.setOnClickListener(this);
+
+		btn_shift = (Button) findViewById(R.id.keyboard_Shift);
+		btn_shift.setOnTouchListener(new View.OnTouchListener() {
+			@Override
+			public boolean onTouch(View v, MotionEvent event) {
+
+				if (event.getAction() == MotionEvent.ACTION_DOWN) {
+					if (isShift) {
+						isShift = false;
+						btn_shift.setTextColor(Color.WHITE);
+						tcp.sendMessage(ProtocalFN + "Shift_off" + "\r\n");
+					} else {
+						isShift = true;
+						btn_shift.setTextColor(Color.RED);
+						tcp.sendMessage(ProtocalFN + "Shift_on" + "\r\n");
+					}
+
+				} else if (event.getAction() == MotionEvent.ACTION_UP) {
+
+				}
+				return false;
+			}
+		});
+		btn_ctrl = (Button) findViewById(R.id.keyboard_Ctrl);
+		btn_ctrl.setOnTouchListener(new View.OnTouchListener() {
+
+			@Override
+			public boolean onTouch(View v, MotionEvent event) {
+
+				if (event.getAction() == MotionEvent.ACTION_DOWN) {
+					if (isCtrl) {
+						isCtrl = false;
+						btn_ctrl.setTextColor(Color.WHITE);
+						tcp.sendMessage(ProtocalFN + "Ctrl_off" + "\r\n");
+					} else {
+						isCtrl = true;
+						btn_ctrl.setTextColor(Color.RED);
+						tcp.sendMessage(ProtocalFN + "Ctrl_on" + "\r\n");
+					}
+
+				} else if (event.getAction() == MotionEvent.ACTION_UP) {
+
+				}
+				return false;
+			}
+		});
+
+		btn_up = (ImageButton) findViewById(R.id.keyboard_Up);
+		btn_up.setOnTouchListener(new View.OnTouchListener() {
+			@Override
+			public boolean onTouch(View v, MotionEvent event) {
+
+				if (event.getAction() == MotionEvent.ACTION_DOWN) {
+					vibe.vibrate(15);
+					tcp.sendMessage(ProtocalFN + "Up" + "\r\n");
+				} else if (event.getAction() == MotionEvent.ACTION_UP) {
+					if (isLong) {
+						scrollHandler.removeMessages(0);
+						isLong = false;
+					}
+				}
+				return false;
+			}
+		});
+		btn_up.setOnLongClickListener(new View.OnLongClickListener() {
+
+			@Override
+			public boolean onLongClick(View v) {
+				isLong = true;
+				Message msg = Message.obtain(scrollHandler, 0, "Scroll_up");
+				scrollHandler.sendMessage(msg);
+				return false;
+			}
+		});
+		btn_down = (ImageButton) findViewById(R.id.keyboard_Down);
+		btn_down.setOnTouchListener(new View.OnTouchListener() {
+			@Override
+			public boolean onTouch(View v, MotionEvent event) {
+
+				if (event.getAction() == MotionEvent.ACTION_DOWN) {
+					vibe.vibrate(15);
+					tcp.sendMessage(ProtocalFN + "Down" + "\r\n");
+				} else if (event.getAction() == MotionEvent.ACTION_UP) {
+					if (isLong) {
+						scrollHandler.removeMessages(0);
+
+						isLong = false;
+					}
+				}
+				return false;
+			}
+		});
+		btn_down.setOnLongClickListener(new View.OnLongClickListener() {
+
+			@Override
+			public boolean onLongClick(View v) {
+				isLong = true;
+				Message msg = Message.obtain(scrollHandler, 0, "Scroll_down");
+				scrollHandler.sendMessage(msg);
+				return false;
+			}
+		});
+
+		btn_left = (ImageButton) findViewById(R.id.keyboard_left);
+		btn_left.setOnTouchListener(new View.OnTouchListener() {
+			@Override
+			public boolean onTouch(View v, MotionEvent event) {
+
+				if (event.getAction() == MotionEvent.ACTION_DOWN) {
+					vibe.vibrate(15);
+					tcp.sendMessage(ProtocalFN + "Left" + "\r\n");
+				} else if (event.getAction() == MotionEvent.ACTION_UP) {
+					if (isLong) {
+						mHandler.removeMessages(0);
+						isLong = false;
+					}
+				}
+				return false;
+			}
+		});
+		btn_left.setOnLongClickListener(new View.OnLongClickListener() {
+
+			@Override
+			public boolean onLongClick(View v) {
+				isLong = true;
+				Message msg = Message.obtain(mHandler, 0, "Left");
+				mHandler.sendMessage(msg);
+				return false;
+			}
+		});
+		btn_right = (ImageButton) findViewById(R.id.keyboard_Right);
+		btn_right.setOnTouchListener(new View.OnTouchListener() {
+			@Override
+			public boolean onTouch(View v, MotionEvent event) {
+
+				if (event.getAction() == MotionEvent.ACTION_DOWN) {
+					vibe.vibrate(15);
+					tcp.sendMessage(ProtocalFN + "Right" + "\r\n");
+				} else if (event.getAction() == MotionEvent.ACTION_UP) {
+					if (isLong) {
+						mHandler.removeMessages(0);
+
+						isLong = false;
+					}
+				}
+				return false;
+			}
+		});
+		btn_right.setOnLongClickListener(new View.OnLongClickListener() {
+
+			@Override
+			public boolean onLongClick(View v) {
+				isLong = true;
+				Message msg = Message.obtain(mHandler, 0, "Right");
+				mHandler.sendMessage(msg);
+				return false;
+			}
+		});
+
+		btn_left_click = (ImageButton) findViewById(R.id.mouse_left);
+		btn_left_click.setOnTouchListener(new View.OnTouchListener() {
+
+			@Override
+			public boolean onTouch(View v, MotionEvent event) {
+
+				if (event.getAction() == MotionEvent.ACTION_DOWN) {
+					vibe.vibrate(15);
+					if (dClick == 0) {
+						dClick = 1;
+						oneClick = new Date();
+						tcp.sendMessage(ProtocalFN + "Click_on" + "\r\n");
+					} else if (dClick == 1) {
+						twoClick = new Date();
+						if (twoClick.getTime() - oneClick.getTime() <= 700) {
+							try {
+								byte[] msg = ("d.click").getBytes("UTF-8"); // 더블클릭 인식
+								mouse_udppacket = new DatagramPacket(msg,
+										msg.length, InetAddress.getByName(myApp
+												.getIP()), udp_Mouse_Port);
+								mouse_udpsocket.send(mouse_udppacket);
+
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
+						} else {
+
+							tcp.sendMessage(ProtocalFN + "Click_on" + "\r\n");
+						}
+						dClick = 0;
+					}
+
+				} else if (event.getAction() == MotionEvent.ACTION_UP) {
+					tcp.sendMessage(ProtocalFN + "Click_off" + "\r\n");
+				}
+				return false;
+			}
+		});
+		btn_right_click = (ImageButton) findViewById(R.id.mouse_right);
+		btn_right_click.setOnTouchListener(new View.OnTouchListener() {
+
+			@Override
+			public boolean onTouch(View v, MotionEvent event) {
+
+				if (event.getAction() == MotionEvent.ACTION_DOWN) {
+					vibe.vibrate(15);
+
+				} else if (event.getAction() == MotionEvent.ACTION_UP) {
+					tcp.sendMessage(ProtocalFN + "Rclick" + "\r\n");
+
+				}
+				return false;
+			}
+		});
+
+	}
+
+	@Override
+	public void onDestroy() {
+		super.onDestroy();
+		if (isKtcp)
+			goneCustomKeyboard();
+		callStateReceiver.CallState(true);
+		if (is_Socket_connect) {
+			tcp_image.Close_Socket();
+			tcp_image_two.Close_Socket();
+			tcp.Close_Socket();
+			is_Socket_connect = false;
+		}
+		this.mouse_udpsocket.close();
+		mChord.CloseChord(false);
+		finish();
+	}
+
+	@Override
+	public void onClick(View v) {
+		vibe.vibrate(14);
+
+		String str = ((Button) v).getText().toString();
+
+		tcp.sendMessage(ProtocalFN + str + "\r\n");
+
+		if (isCtrl) {
+			isCtrl = false;
+			btn_ctrl.setTextColor(Color.WHITE);
+			tcp.sendMessage(ProtocalFN + "Ctrl_off" + "\r\n");
+		}
+		if (isShift) {
+			isShift = false;
+			btn_shift.setTextColor(Color.WHITE);
+			tcp.sendMessage(ProtocalFN + "Shift_off" + "\r\n");
+		}
+
+	}
+
+	@Override
+	protected void onUserLeaveHint() { // 홈키 눌렀을 때 사용
+		super.onUserLeaveHint();
+		callStateReceiver.CallState(true);
+	}
+
+	@Override
+	public void onBackPressed() {
+		super.onBackPressed();
+		if (isKtcp || isFN) {
+
+			btn_FN.setTextColor(Color.BLACK);
+			goneCustomKeyboard();
+		} else {
+			exit_dialog();
+		}
+	}
+
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+
+		if (keyCode == KeyEvent.KEYCODE_BACK) {
+			if (isKtcp || isFN) {
+				btn_FN.setTextColor(Color.WHITE);
+				goneCustomKeyboard();
+			} else {
+				exit_dialog();
+			}
+			return false;
+		}
+
+		return super.onKeyDown(keyCode, event);
+	}
+
+	public void exit_dialog() { // ���� ���̾�α�
+		AlertDialog.Builder longDialog = new AlertDialog.Builder(this);
+		longDialog.setPositiveButton("Yes",
+				new DialogInterface.OnClickListener() {
+
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						mChord.CloseChord(false);
+
+						finish();
+					}
+				}).setNegativeButton("No",
+				new DialogInterface.OnClickListener() {
+
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						dialog.dismiss();
+					}
+				});
+		AlertDialog alert = longDialog.create();
+		alert.setTitle("종료하시겠습니까?");
+		alert.show();
+
+	}
+
+	// Secondary Display
+
+	private void showPresentation(Display display) {
+		 RemotePresentation presentation = new RemotePresentation(this, display, mSurfaceViewMain);
+		//presentation = new RemotePresentation(this, display, mVideoViewMain);
+		mActivePresentations.put(display.getDisplayId(), presentation);
+		presentation.show();
+	}
+
+	private void startVideo() {
+		presentation.startVideo();
+	}
+
+	private void hidePresentation(Display display) {
+		final int displayId = display.getDisplayId();
+		RemotePresentation presentation = mActivePresentations.get(displayId);
+		if (presentation == null) {
+			return;
+		}
+
+		presentation.dismiss();
+		mActivePresentations.delete(displayId);
+
+	}
+
+	private final class RemotePresentation extends Presentation {
+
+		private MyApplication myApp;
+
+		SurfaceViewMain mSurFaceViewMain;
+		VideoViewMain mVideoView;
+		LayoutInflater controlInflater = null;
+
+		 public RemotePresentation(Context context, Display display, SurfaceViewMain mSurfaceViewMain) {
+		 super(context, display);
+		 this.mSurFaceViewMain = mSurfaceViewMain;
+		 
+		 }
+
+//		public RemotePresentation(Context context, Display display,
+//				VideoViewMain mSurfaceViewMain) {
+//			super(context, display);
+//
+//			this.mVideoView = mSurfaceViewMain;
+//			// mSurFaceViewMain = new SurfaceViewMain(context);
+//
+//		}
+
+		@Override
+		protected void onCreate(Bundle savedInstanceState) {
+			super.onCreate(savedInstanceState);
+
+			Resources r = getContext().getResources();
+
+			requestWindowFeature(Window.FEATURE_NO_TITLE);
+			getWindow()
+					.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+			getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+					WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
+			//setContentView(mVideoView);
+			
+			setContentView(mSurFaceViewMain);
+			
+			controlInflater = LayoutInflater.from(getBaseContext());
+			View viewControl = controlInflater.inflate(
+					R.layout.float_surfaceview, null);
+			LayoutParams layoutParamsControl = new LayoutParams(
+					LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
+
+			this.addContentView(viewControl, layoutParamsControl);
+
+		}
+
+		public void startVideo() {
+
+			mVideoView.startVideo();
+		}
+
+	}
+
+}

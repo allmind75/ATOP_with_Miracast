@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/simple_background"
+    android:orientation="vertical" >
+
+    <LinearLayout style="@style/Layout_equalDivision_vertical" >
+
+        <TextView
+            android:id="@+id/myNodeName_textView"
+            style="@style/Layout_myNodeName_textView" />
+
+        <TextView
+            android:id="@+id/joinedNodeList_textView"
+            style="@style/Layout_subTitle_textView"
+            android:text="joined_node_list" />
+
+        <ExpandableListView
+            android:id="@+id/node_listView"
+            style="@style/Layout_node_listView"
+            android:layout_height="100dp" >
+        </ExpandableListView>
+
+        <LinearLayout
+            style="@style/Layout_mw_horizontal"
+            android:gravity="bottom|center" >
+
+            <Button
+                android:id="@+id/send_btn"
+                android:layout_width="180dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="SEND"
+                android:textColor="#ffffff"
+                android:typeface="monospace" />
+        </LinearLayout>
+    </LinearLayout>
+
+</LinearLayout>

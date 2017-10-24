@@ -1,0 +1,275 @@
+package com.atop.network;
+
+import java.io.BufferedOutputStream;
+import java.io.DataInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+
+import android.content.Context;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.util.Log;
+
+public class NetworkMedia extends Thread {
+	private final String TAG = "Class::NetworkMedia";
+
+	private Socket MediaSocket;
+
+	private String server_ip;
+	private static final int server_port = 2000;
+	private DataInputStream fileIm;
+
+	private String dirPath = "/sdcard/ATOP/Stream/"; // 파일이 저장 될 경로
+
+	private FileOutputStream fos;
+	private BufferedOutputStream bos;
+	private boolean socketConnect = false;
+
+	private byte[] fileNameByte; // 파일 이름 받아오는 바이트
+	private int fileNameSize; // 파일 이름의 바이트크기
+	private String fileName;
+	private byte[] fileSizeByte; // 파일 크기 바이트
+	private int fileSize; // 바이트 크기
+	private String strSize; // 바이트의 크기를 String으로 확인
+	private long fileAllSize; // 파일 전체 크기
+	private Context con;
+	private String FILEBACK = "";
+	private Handler mhandler;
+	private boolean isSeek = false; // seekbar를 사용했는지?
+	private int TempCount = 0; // 다 받았는지
+
+	public NetworkMedia(String ip, Context context, Handler handler) {
+		this.server_ip = ip;
+		this.con = context;
+		this.mhandler = handler;
+	}
+
+	public boolean istcpConnet() {
+		return socketConnect;
+	}
+
+	public void run() {
+
+		try {
+			MediaSocket = new Socket();
+			InetSocketAddress socketAddr = new InetSocketAddress(server_ip,
+					server_port);
+			MediaSocket.connect(socketAddr, 5000);
+
+			Log.e(TAG, "file new socket ");
+			socketConnect = true;
+			sendMessage("Open"); // 소켓이 열리는걸 서버에게 알림
+			fileIm = new DataInputStream(MediaSocket.getInputStream());
+
+			while (true) {
+
+				// byte[] byteSize = new byte[4];
+				// fileIm.read(byteSize); // 전체 사이즈 받기
+				// fileAllSize = byte2Int(byteSize); // 전체 사이즈
+				fileAllSize = 100000;
+
+				fileNameByte = new byte[1024];
+				fileNameSize = fileIm.read(fileNameByte); // 파일 이름을 받음.
+				fileName = new String(fileNameByte, 0, fileNameSize, "UTF-8");
+				String[] subfileName = fileName.split("\\."); // 확장자확인
+
+				FILEBACK = "." + subfileName[1];
+
+				Bundle b = new Bundle();
+				b.putInt("flag", 1);
+				b.putLong("filelen", fileAllSize);
+				b.putString("fileback", FILEBACK);
+				Message msg = mhandler.obtainMessage();
+				msg.setData(b);
+				mhandler.sendMessage(msg);
+				isSeek = true;
+
+				// ///////////////////////// test
+				File receiveFile = new File(dirPath + fileName); // 진짜 파일
+				fos = new FileOutputStream(receiveFile);
+				bos = new BufferedOutputStream(fos); // 파일 생성
+
+				sendMessage("Size"); // Size 받기를 서버에게 알림
+
+				fileSizeByte = new byte[1024];
+				fileSize = fileIm.read(fileSizeByte);
+
+				strSize = new String(fileSizeByte, 0, fileSize, "UTF-8");
+				Log.e(TAG, "file size : " + strSize);
+				fileAllSize = Long.parseLong(strSize);
+				
+				sendMessage("Ready"); // 파일 받을 준비가 됬음을 알림.
+
+				long len = 0;
+				int size = 7168;
+				int t = 1;
+				byte[] data = new byte[size];
+				while (len != fileAllSize) { // len이 size보다 작고 seek바를 안움직였을때
+					int readSize = fileIm.read(data);
+					len = len + readSize;
+					if (len > 6000 && t == 1) {
+						t = 2;
+						Message msggd = mhandler.obtainMessage();
+						Bundle bbd = new Bundle();
+						bbd.putInt("flag", 2);
+						msggd.setData(bbd);
+						mhandler.sendMessage(msggd);
+					}
+
+					bos.write(data, 0, readSize);
+					bos.flush();
+				}
+				bos.close();
+				fos.close(); // 파일닫기
+
+
+				String[] str = fileName.split("\\.");
+				String num = str[0].substring(4, str[0].length());
+
+				Message msgg = mhandler.obtainMessage();
+				Bundle bb = new Bundle();
+				bb.putInt("flag", 3);
+				bb.putInt("savefile", Integer.parseInt(num));
+				msgg.setData(bb);
+				mhandler.sendMessage(msgg);
+				
+				
+				
+				// ////////////////////////////////////test
+
+				// 20개는 돌려서 받아야함
+				// while (TempCount != 20) {
+				//
+				// sendMessage("Okay");
+				// sendTemp_File();
+				// }
+				//
+				// sendMessage("Open"); // 또다른 파일을 받기 위해 기다림!!!
+
+			}
+		} catch (IOException e) {
+			socketConnect = false;
+			Log.e(TAG, "Socket Connect Exception2 : " + e); // 소켓 IoException
+
+		} catch (Exception e) { // 소켓 Exception
+			socketConnect = false;
+			Log.e(TAG, "Exception : " + e);
+		} finally {
+			try {
+				sendMessage("End" + "\r\n");
+				socketConnect = false;
+				MediaSocket.close();
+			} catch (IOException e) {
+				Log.e(TAG, "socket close : " + e);
+			}
+		}
+	} // end of run
+
+	public void sendTemp_File() {
+		try {
+			byte[] byteSize = new byte[4];
+			fileIm.read(byteSize); // temp 사이즈
+			int tempsize = byte2Int(byteSize); // temp 사이즈
+
+			fileNameByte = new byte[1024];
+
+			fileNameSize = fileIm.read(fileNameByte); // 파일 이름을 받음.
+
+			fileName = new String(fileNameByte, 0, fileNameSize, "UTF-8");
+
+			File receiveFile = new File(dirPath + fileName); // 진짜 파일
+			fos = new FileOutputStream(receiveFile);
+			bos = new BufferedOutputStream(fos); // 파일 생성
+
+			sendMessage("Size"); // Size 받기를 서버에게 알림
+
+			fileSizeByte = new byte[1024];
+			fileSize = fileIm.read(fileSizeByte);
+
+			strSize = new String(fileSizeByte, 0, fileSize, "UTF-8");
+			Log.e(TAG, "file size : " + strSize);
+			fileAllSize = Long.parseLong(strSize);
+
+			sendMessage("Ready"); // 파일 받을 준비가 됬음을 알림.
+
+			long len = 0;
+			int size = 7168;
+			byte[] data = new byte[size];
+			while (len != tempsize) { // len이 size보다 작고 seek바를 안움직였을때
+				if (isSeek) {
+					isSeek = false;
+					sendTemp_File(); // 재귀 ㅋㅋㅋㅋㅋ
+					return; // 이 함수를 끝내버림
+				}
+				int readSize = fileIm.read(data);
+				len = len + readSize;
+				bos.write(data, 0, readSize);
+				bos.flush();
+			}
+			bos.close();
+			fos.close(); // 파일닫기
+			TempCount++; // 파일의 갯수가 하나씩 증가함
+
+			if (TempCount == 1) {
+				Message msg = mhandler.obtainMessage();
+				Bundle b = new Bundle();
+				b.putInt("flag", 2);
+				msg.setData(b);
+				mhandler.sendMessage(msg);
+				Log.e(TAG, "socket 에서 보내는 vidoe start");
+			}
+			// 받은 파일 체크하라고 ㅋㅋㅋㅋ
+			String[] str = fileName.split("\\.");
+			String num = str[0].substring(4, str[0].length());
+
+			Message msgg = mhandler.obtainMessage();
+			Bundle bb = new Bundle();
+			bb.putInt("flag", 3);
+			bb.putInt("savefile", Integer.parseInt(num));
+			msgg.setData(bb);
+			mhandler.sendMessage(msgg);
+
+		} catch (Exception e) {
+			Log.e(TAG, "err : " + e);
+		}
+	}
+
+	public void setSeek(boolean seek) {
+		this.isSeek = seek;
+	}
+
+	public void sendMessage(String message) {
+
+		try {
+			MediaSocket.getOutputStream().write(message.getBytes());
+		} catch (IOException e) {
+			Log.e(TAG, "패킷 전송 실패." + e);
+
+		}
+	}
+
+	public void Close_Socket() {
+		try {
+			socketConnect = false;
+			sendMessage("End" + "\r\n");
+			MediaSocket.close();
+		} catch (IOException e) {
+			Log.d(TAG, "Socket Close Failed");
+			e.printStackTrace();
+		}
+	}
+
+	public static int byte2Int(byte[] src) {
+		int s1 = src[0] & 0xFF;
+		int s2 = src[1] & 0xFF;
+		int s3 = src[2] & 0xFF;
+		int s4 = src[3] & 0xFF;
+
+		return ((s1 << 24) + (s2 << 16) + (s3 << 8) + (s4 << 0));
+	}
+
+}

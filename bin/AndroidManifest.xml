@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.ssm_test"
+    android:versionCode="1"
+    android:versionName="1.0" >
+
+    <uses-sdk
+        android:minSdkVersion="17"
+        android:targetSdkVersion="17" />
+
+    <uses-permission android:name="android.permission.CALL_PHONE" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="com.samsung.android.providers.context.permission.WRITE_USE_APP_FEATURE_SURVEY" />
+
+    <uses-feature android:name="android.hardware.wifi.diret" android:required="true" />
+    <application
+        android:name="com.atop.main.MyApplication"
+        android:allowBackup="true"
+        android:hardwareAccelerated="true"
+        android:icon="@drawable/ic_launcher2"
+        android:label="@string/app_name"
+        android:largeHeap="true"
+        android:screenOrientation="portrait"
+        android:theme="@style/AppTheme" >
+        <activity
+            android:name="com.atop.main.SplashViewActivity"
+            android:label="@string/app_name" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity android:name="com.atop.main.MainActivity" >
+        </activity>     
+        <activity
+            android:name="com.atop.wifiDirect.WiFiDirectActivity"
+            android:label="@string/title_activity_wifiDirect" >       
+        </activity>
+        <activity
+            android:name="com.atop.main.SpotActivity"
+            android:label="@string/title_activity_spot"
+            android:windowSoftInputMode="stateHidden" >
+        </activity>
+        <activity
+            android:name="com.atop.main.SendFilesActivity"
+            android:label="@string/title_activity_sendFile" >
+        </activity>
+        <activity
+            android:name="com.atop.main.FileSelectActivity"
+            android:label="@string/title_activity_fileSelect" >
+        </activity>
+        <activity
+            android:name="com.atop.main.SurfaceViewMain"
+            android:label="@string/title_activity_surface_view" >
+        </activity>
+        <activity
+            android:name="com.atop.keyboard.HanKeyboard"
+            android:label="@string/title_activity_han_keyboard"
+            android:theme="@android:style/Theme.NoTitleBar.Fullscreen" >
+        </activity>
+        <activity
+            android:name="com.atop.keyboard.Mouse"
+            android:label="@string/title_activity_mouse"
+            android:theme="@android:style/Theme.NoTitleBar.Fullscreen" >
+        </activity>
+        <activity
+            android:name="com.atop.keyboard.SpacialKeyboard"
+            android:label="@string/title_activity_spacial_keyboard"
+            android:theme="@android:style/Theme.NoTitleBar.Fullscreen" >
+        </activity>
+        <activity
+            android:name="com.atop.keyboard.KeyboardMouseActivity"
+            android:label="@string/title_activity_combine_km"
+            android:windowSoftInputMode="stateHidden" >
+        </activity>
+        <activity
+            android:name="com.atop.wol.WolActivity"
+            android:label="@string/title_activity_wol" >
+        </activity>
+        <activity
+            android:name=".SettingsActivity"
+            android:label="@string/title_activity_settings" >
+        </activity>
+        <activity
+            android:name="com.atop.main.SettingActivity"
+            android:label="@string/title_activity_setting" >
+        </activity>
+        <activity
+            android:name="com.atop.main.SelectModeActivity"
+            android:label="@string/title_activity_select_mode" >
+        </activity>
+        <activity
+            android:name="com.atop.main.SelectLayoutActivity"
+            android:label="@string/title_activity_select_layout" >
+        </activity>
+        <activity
+            android:name="com.atop.main.SurfaceViewActivity"
+            android:label="@string/title_activity_surface_view" >
+        </activity>
+                       
+        <activity
+            android:name="com.atop.main.ConnectServerActivity"
+            android:label="@string/title_activity_connect_server" >
+        </activity>
+                
+        <receiver android:name="com.atop.callstate.CallStateReceiver" >
+            <intent-filter>
+                <action android:name="android.intent.action.PHONE_STATE" />
+            </intent-filter>
+        </receiver>
+
+        <activity
+            android:name=".FileActivity"
+            android:label="@string/title_activity_file" >
+        </activity>
+        <activity
+            android:name="com.atop.media.MideaTest"
+            android:label="@string/title_activity_midea_test" >
+        </activity>
+        <activity
+            android:name=".Mediatest"
+            android:label="@string/title_activity_mediatest" >
+        </activity>
+        <activity
+            android:name=".Test"
+            android:label="@string/title_activity_test" >
+        </activity>
+    </application>
+
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+
+</manifest>

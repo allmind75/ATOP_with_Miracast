@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+ 
+  
+    <item 
+        android:id="@+id/action_item_setting"
+        android:title="action_settings"
+        android:icon="@drawable/ic_action_overflow"
+        android:showAsAction="always"
+        android:background="#8FA7E7" >
+    	
+    	<menu>
+    	    
+    	    <item 
+    	        android:id="@+id/action_item_option"
+    	        android:title="Setting"
+    	        android:icon="@drawable/ic_action_settings"
+    	        android:showAsAction="always"/>
+    	    
+    	    <item
+    	        android:id="@+id/action_item_wifiSetting"   
+    	        android:title="Wi-Fi Direct"
+    	        android:icon="@drawable/ic_action_network_wifi"
+    	        android:showAsAction="always" />
+    	    
+    	    <item
+    	        android:id="@+id/action_item_wol"
+    	        android:title="WOL"
+    	        android:icon="@drawable/ic_action_flash_on"
+    	        android:showAsAction="always" />
+    	    
+    	    
+    	</menu>
+    	      
+    </item>
+    
+</menu>

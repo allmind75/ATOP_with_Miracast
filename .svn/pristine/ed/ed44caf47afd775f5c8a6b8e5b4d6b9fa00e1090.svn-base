@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Keyboard xmlns:android="http://schemas.android.com/apk/res/android"
+    android:keyHeight="10%p"
+    android:keyWidth="25%p"
+    android:verticalGap="5px" >
+
+    <Row android:verticalGap="20px" >
+        <Key
+            android:codes="250"
+            android:horizontalGap="10%p"
+            android:keyEdgeFlags="left"
+			android:keyIcon="@drawable/btn_backward"
+			android:popupKeyboard="@xml/popup" />
+        <Key
+            android:codes="251"
+            android:horizontalGap="5%p"
+			android:keyIcon="@drawable/btn_forward"
+			android:popupKeyboard="@xml/popup" />
+        <Key
+            android:codes="252"
+            android:horizontalGap="5%p"
+			android:keyIcon="@drawable/btn_exit"
+            android:popupKeyboard="@xml/popup" />
+        <Key
+            android:horizontalGap="5%p"
+            android:keyEdgeFlags="right"
+            android:keyLabel=" "
+            android:keyWidth="0%p" />
+    </Row>
+    <Row>
+        <Key
+            android:codes="253"
+            android:horizontalGap="10%p"
+            android:keyEdgeFlags="left"
+			android:keyIcon="@drawable/btn_stop"
+			android:popupKeyboard="@xml/popup" />
+        <Key
+            android:codes="254"
+            android:horizontalGap="5%p"
+			android:keyIcon="@drawable/btn_play_circle"
+			android:popupKeyboard="@xml/popup"/>
+        <Key
+            android:codes="255"
+            android:horizontalGap="5%p"
+            android:keyEdgeFlags="right"
+			android:keyIcon="@drawable/btn_pause"
+			android:popupKeyboard="@xml/popup" />
+    </Row>
+
+</Keyboard>

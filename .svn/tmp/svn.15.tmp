@@ -1,0 +1,386 @@
+package com.atop.main;
+
+import java.io.File;
+
+import com.atop.keyboard.KeyboardMouseActivity;
+
+import android.content.Context;
+import android.media.MediaPlayer;
+import android.os.AsyncTask;
+import android.util.Log;
+import android.view.SurfaceHolder;
+import android.view.SurfaceHolder.Callback;
+import android.view.SurfaceView;
+
+public class VideoViewMain extends SurfaceView implements Callback {
+	private final String TAG = "Class::VideoView";
+	private static int[] FILE_ARR;
+	private static int DelayTime = 5000;
+	private SurfaceHolder mSurfaceHolder;
+	private SurfaceHolder mholder;
+	public static MediaPlayer mPlayer;
+	String path = "/sdcard/ATOP/Stream";
+	String fileBack = "";
+	private static int CUR_FILE_NUM = -1;
+	private File CUR_file;
+	boolean ispause = false;
+	boolean isSeek = true;
+	boolean isPlay = true;
+	boolean user_seekto = false;
+	int user_seek_time = 0;
+	int seekcntNext = 0;
+	int seekcntBack = 0;
+	int DelayMode = 0;
+	SeekbarAsync seekbarA;
+	private int AllfileSize = 0;
+	private int cutfileSize = 0;
+	private int Alltime = 0;
+	private int cutAlltime = 0;
+	int touchtime = 0;
+	private boolean isfinish = false;
+
+	public VideoViewMain(Context context) {
+		super(context);
+		mSurfaceHolder = getHolder();
+		mSurfaceHolder.addCallback(this);
+		init();
+	}
+
+	public void init() {
+		FILE_ARR = new int[21];
+		File dirfile = new File(path);
+		if (!dirfile.exists()) { // 폴더만들기
+			dirfile.mkdirs();
+		}
+		path += "/temp";
+	}
+
+	public boolean hasfile(int cur) {
+		if (FILE_ARR[cur] == 1) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	public void video_Seekto(int filenum, int time) {
+		Log.e(TAG, "filenum : " + filenum);
+		user_seekto = true;
+		CUR_FILE_NUM = filenum - 1;
+		this.user_seek_time = time;
+		ispause = true;
+		videoPlay(1);
+	}
+
+	public void setAllfileSize(int size, int time) {
+		this.Alltime = time;
+		this.AllfileSize = size;
+		cutfileSize = AllfileSize / 20;
+		cutAlltime = Alltime / 20;
+	}
+
+	public void saveFile(int check) {
+		FILE_ARR[check] = 1;
+	}
+
+	private String getpath(boolean up) {
+		CUR_FILE_NUM++;
+		String rpath = path + CUR_FILE_NUM + fileBack;
+		if (up == false) {
+			CUR_FILE_NUM--;
+		}
+		return rpath;
+	}
+
+	private String backpath(boolean down) {
+		CUR_FILE_NUM--;
+		String rpath = path + CUR_FILE_NUM + fileBack;
+		if (down == false)
+			CUR_FILE_NUM++;
+		return rpath;
+	}
+
+	public void NextVideoPre() {
+		seekbarA.isfind = true;
+		if (CUR_FILE_NUM != -1)
+			KeyboardMouseActivity.sendMediaseek(CUR_FILE_NUM + 1);
+		DelayMode = 1;
+		KeyboardMouseActivity.setVideoState_ready();
+	}
+
+	public void BackVideoPre() {
+		seekbarA.isfind = true;
+		if (CUR_FILE_NUM != -1)
+			KeyboardMouseActivity.sendMediaseek(CUR_FILE_NUM - 1);
+		DelayMode = 2;
+		KeyboardMouseActivity.setVideoState_ready();
+	}
+
+	public void videoPlay(int mode) {
+		if (DelayMode != 0) {
+			seekbarA.isfind = false;
+			DelayMode = 0;
+			KeyboardMouseActivity.setVideoState_start();
+		}
+
+		if (mode == 1) {
+
+			CUR_file = new File(getpath(false)); // 파일이 존재하면 플레이... 그런데 없으면 어쩔?
+			try {
+				if (FILE_ARR[CUR_FILE_NUM + 1] == 1) {
+
+					mPlayer.stop();
+					mPlayer.reset();
+
+					mPlayer.setDataSource(getpath(true));
+					mPlayer.prepare();
+
+					mPlayer.start();
+					ispause = false;
+					if (user_seekto) {
+						Thread.sleep(500);
+						// Log.e(TAG, "user_seek_time : " + user_seek_time);
+						mPlayer.seekTo(user_seek_time);
+						// Log.e(TAG, "seekTo : " +
+						// mPlayer.getCurrentPosition());
+						user_seekto = false;
+						user_seek_time = 0;
+					}
+				} else { // 잠시만 기다려주세요ㅋㅋ 다시 틀기 ㅋㅋㅋㅋ cur file 을 ㅋㅋㅋㅋㅋ
+					seekbarA.isfind = true;
+					isPlay = false;
+					NextVideoPre();
+				}
+			} catch (Exception e) {// 잠시만 기다려주세요ㅋㅋ
+				isPlay = false;
+				NextVideoPre();
+				Log.e(TAG, "끄앙 주금");
+			}
+		} else {
+			CUR_file = new File(backpath(false)); // 파일이 존재하면 플레이... 그런데 없으면 어쩔?
+			try {
+				if (FILE_ARR[CUR_FILE_NUM - 1] == 1) {
+					mPlayer.stop();
+					mPlayer.reset();
+
+					mPlayer.setDataSource(backpath(true));
+					mPlayer.prepare();
+					mPlayer.start();
+					ispause = false;
+					int last = mPlayer.getDuration();
+					mPlayer.seekTo(last - 5000);
+
+				} else { // 잠시만 기다려주세요ㅋㅋ
+					seekbarA.isfind = true;
+					isPlay = false;
+					BackVideoPre();
+				}
+			} catch (Exception e) {// 잠시만 기다려주세요ㅋㅋ
+				isPlay = false;
+				BackVideoPre();
+			}
+		}
+	}
+
+	public void startVideo(String fileback) {
+		if (CUR_FILE_NUM == -1) { // 이건 처음에
+			this.fileBack = fileback;
+			seekbarA = new SeekbarAsync();
+			seekbarA.execute();
+			videoPlay(1);
+		}
+		if (ispause) {// 일시정지 중에서 시작을 눌렀을때
+			mPlayer.start();
+			ispause = false;
+		}
+	}
+
+	public void stopVideo() {
+		mPlayer.stop();
+		CUR_FILE_NUM = -1;
+		videoPlay(1);
+		mPlayer.pause();
+	}
+
+	public void pauseVideo() {
+		mPlayer.pause();
+		ispause = true;
+	}
+
+	public void preVideo() {
+		int t = mPlayer.getCurrentPosition();
+
+		if (t + DelayTime + 1000 >= CUR_file.length()) {
+			mPlayer.pause();
+			isPlay = false;
+			videoPlay(1); // 다음 친구로 틀어주기
+		} else {
+			if (seekcntNext < t || seekcntNext == 0) {
+				mPlayer.seekTo(t + DelayTime);
+				seekcntNext = t + DelayTime;
+				seekcntBack = 0;
+			} else
+				seekcntNext = 0;
+		}
+
+	}
+
+	public void backVideo() {
+		int t = mPlayer.getCurrentPosition();
+		if (t - DelayTime <= 0) {
+			if (CUR_FILE_NUM == 0) {
+				mPlayer.seekTo(0);
+			} else {// 이전 친구로 틀어주기
+				mPlayer.pause();
+				isPlay = false;
+				videoPlay(2);
+			}
+		} else {
+			if (seekcntBack > t || seekcntBack == 0) {
+				mPlayer.seekTo(t - DelayTime);
+				seekcntBack = t;
+				seekcntNext = 0;
+			} else
+				seekcntBack = 0;
+		}
+	}
+
+	@Override
+	public void surfaceCreated(SurfaceHolder holder) {
+		if (mPlayer == null)
+			mPlayer = new MediaPlayer();
+		else
+			mPlayer.reset();
+		this.mholder = holder;
+		mPlayer.setOnCompletionListener(mCom);
+		mPlayer.setOnSeekCompleteListener(mSeek);
+		mPlayer.setDisplay(mholder);
+
+	}
+
+	MediaPlayer.OnSeekCompleteListener mSeek = new MediaPlayer.OnSeekCompleteListener() {
+
+		@Override
+		public void onSeekComplete(MediaPlayer mp) {
+			isSeek = true;
+		}
+	};
+
+	MediaPlayer.OnCompletionListener mCom = new MediaPlayer.OnCompletionListener() {
+		public void onCompletion(MediaPlayer mp) {
+			if (isPlay && !isfinish) {
+				videoPlay(1);
+			} else
+				isPlay = true;
+		}
+	};
+
+	@Override
+	public void surfaceChanged(SurfaceHolder holder, int format, int width,
+			int height) {
+
+	}
+
+	@Override
+	public void surfaceDestroyed(SurfaceHolder holder) {
+		CUR_FILE_NUM = -1;
+		isfinish = true;
+		if (seekbarA != null) {
+			seekbarA.isasync = false;
+			seekbarA.cancel(true);
+			seekbarA = null;
+		}
+		if (mPlayer != null) {
+			mPlayer.release();
+			mPlayer = null;
+		}
+	}
+
+	class SeekbarAsync extends AsyncTask<Void, Void, Void> {
+		boolean isasync = true;
+		boolean isfind = true;
+		int checkfile = 0;
+		int filelast = 0;
+		int cur = 0;
+
+		@Override
+		protected void onPreExecute() { // 작업시작전
+			isasync = true;
+			isfind = false;
+		}
+
+		@Override
+		protected Void doInBackground(Void... params) { // 내부에서 하는작업
+			while (isasync && !isCancelled()) {
+				if (isfind == true) {
+					if (DelayMode == 1)
+						checkfile = CUR_FILE_NUM + 1; // 다음께 다 들어올때 까지 기다리라는 말이고
+					else if (DelayMode == 2)
+						checkfile = CUR_FILE_NUM - 1; // 전꺼가 다 들어올때 까지 기다리라는
+														// 말이다.
+
+					Log.e(TAG, "checkfile안 : " + checkfile);
+
+					try {
+						Thread.sleep(1000);
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					if (FILE_ARR[checkfile] == 1) {
+						videoPlay(DelayMode);
+						Log.e(TAG, "delaymode 끝");
+						isfind = false;
+					}
+				} else { // 찾는중이 아니면 돌아가
+					if (!ispause) { // 일시정지가 아니면 돌아감
+						filelast = mPlayer.getDuration();
+						cur = mPlayer.getCurrentPosition();
+
+						long size = (long) ((cutfileSize * CUR_FILE_NUM));
+						if (size < 0)
+							size = 0;
+						long tsize = (cutfileSize * cur) / filelast;
+						KeyboardMouseActivity.media_seekbar
+								.setProgress((int) (size + tsize));
+
+						long time = (cutAlltime * CUR_FILE_NUM);
+						if (time < 0)
+							time = 0;
+
+						KeyboardMouseActivity
+								.setcurTime((int) (time + cur / 1000));
+
+					}
+					try {
+						Thread.sleep(1000);
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+			}
+
+			return null;
+		}
+
+		@Override
+		protected void onPostExecute(Void result) { // 작업끝나고
+			isasync = false;
+			super.onPostExecute(result);
+		}
+
+		@Override
+		protected void onCancelled() { // 취소할때
+			isasync = false;
+			super.onCancelled();
+		}
+
+		@Override
+		protected void onProgressUpdate(Void... values) { // UI 업데이트
+			super.onProgressUpdate(values);
+		}
+
+	}
+
+}

@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Keyboard xmlns:android="http://schemas.android.com/apk/res/android"
+    android:keyHeight="8.5%p"
+    android:keyWidth="10%p"
+    android:verticalGap="5px" >
+
+    <Row>
+        <Key
+            android:keyEdgeFlags="left"
+            android:keyLabel="ㅂ"
+            android:popupCharacters="ㅂㅃ"
+            android:popupKeyboard="@xml/popup" />
+        <Key
+            android:keyLabel="ㅈ"
+            android:popupCharacters="ㅈㅉ"
+            android:popupKeyboard="@xml/popup" />
+        <Key
+            android:keyLabel="ㄷ"
+            android:popupCharacters="ㄷㄸ"
+            android:popupKeyboard="@xml/popup" />
+        <Key
+            android:keyLabel="ㄱ"
+            android:popupCharacters="ㄱㄲ"
+            android:popupKeyboard="@xml/popup" />
+        <Key
+            android:keyLabel="ㅅ"
+            android:popupCharacters="ㅅㅆ"
+            android:popupKeyboard="@xml/popup" />
+        <Key android:keyLabel="ㅛ" />
+        <Key android:keyLabel="ㅕ" />
+        <Key android:keyLabel="ㅑ" />
+        <Key
+            android:keyLabel="ㅐ"
+            android:popupCharacters="ㅐㅒ"
+            android:popupKeyboard="@xml/popup" />
+        <Key
+            android:keyEdgeFlags="right"
+            android:keyLabel="ㅔ"
+            android:popupCharacters="ㅔㅖ"
+            android:popupKeyboard="@xml/popup" />
+    </Row>
+    <Row>
+        <Key
+            android:horizontalGap="5%p"
+            android:keyEdgeFlags="left"
+            android:keyLabel="ㅁ" />
+        <Key android:keyLabel="ㄴ" />
+        <Key android:keyLabel="ㅇ" />
+        <Key android:keyLabel="ㄹ" />
+        <Key android:keyLabel="ㅎ" />
+        <Key android:keyLabel="ㅗ" />
+        <Key android:keyLabel="ㅓ" />
+        <Key android:keyLabel="ㅏ" />
+        <Key android:keyLabel="ㅣ" />
+    </Row>
+    <Row>
+        <Key
+            android:codes="10"
+            android:keyEdgeFlags="left"
+            android:keyIcon="@drawable/sym_keyboard_up"
+            android:keyWidth="15%p" />
+        <Key android:keyLabel="ㅋ" />
+        <Key android:keyLabel="ㅌ" />
+        <Key android:keyLabel="ㅊ" />
+        <Key android:keyLabel="ㅍ" />
+        <Key android:keyLabel="ㅠ" />
+        <Key android:keyLabel="ㅜ" />
+        <Key android:keyLabel="ㅡ" />
+        <Key
+            android:codes="11"
+            android:isRepeatable="true"
+            android:keyEdgeFlags="right"
+            android:keyIcon="@drawable/sym_keyboard_delete"
+            android:keyWidth="15%p" />
+    </Row>
+    <Row>
+        <Key
+            android:codes="12"
+            android:keyEdgeFlags="left"
+            android:keyLabel="기호"
+            android:keyWidth="15%p" />
+        <Key
+            android:codes="13"
+            android:keyLabel="한/영"
+            android:keyWidth="15%p" />
+        <Key
+            android:codes="14"
+            android:keyLabel="Space"
+            android:keyWidth="40%p" />
+        <Key
+            android:keyLabel="."
+            android:popupCharacters=".,?!"
+            android:popupKeyboard="@xml/popup" />
+        <Key
+            android:codes="15"
+            android:isRepeatable="true"
+            android:keyEdgeFlags="right"
+            android:keyIcon="@drawable/sym_keyboard_return"
+            android:keyWidth="20%p" />
+    </Row>
+
+</Keyboard>

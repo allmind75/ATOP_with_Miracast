@@ -1,0 +1,138 @@
+package com.atop.network;
+
+import java.io.BufferedOutputStream;
+import java.io.DataInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+
+import android.content.Context;
+import android.util.Log;
+
+public class NetworkMedia extends Thread {
+	private final String TAG = "Class::NetworkMedia";
+
+	private Socket MediaSocket;
+
+	private String server_ip;
+	private static final int server_port = 2000;
+	private DataInputStream fileIm;
+
+	private String dirPath = "/sdcard/ATOP/"; // 파일이 저장 될 경로
+
+	private FileOutputStream fos;
+	private BufferedOutputStream bos;
+	private boolean socketConnect = false;
+
+	private byte[] fileNameByte; // 파일 이름 받아오는 바이트
+	private int fileNameSize; // 파일 이름의 바이트크기
+	private String fileName;
+	private byte[] fileSizeByte; // 파일 크기 바이트
+	private int fileSize; // 바이트 크기
+	private String strSize; // 바이트의 크기를 String으로 확인
+	private long fileAllSize; // 파일 전체 크기
+	private Context con;
+
+	public NetworkMedia(String ip, Context context) {
+		this.server_ip = ip;
+		this.con = context;
+	}
+
+	public boolean istcpConnet() {
+		return socketConnect;
+	}
+
+	public void run() {
+
+		try {
+
+			MediaSocket = new Socket();
+			InetSocketAddress socketAddr = new InetSocketAddress(server_ip,
+					server_port);
+			MediaSocket.connect(socketAddr, 5000);
+
+			Log.e(TAG, "file new socket ");
+			socketConnect = true;
+			sendMessage("Open"); // 소켓이 열리는걸 서버에게 알림
+			while (true) {
+
+				fileIm = new DataInputStream(MediaSocket.getInputStream());
+
+				fileNameByte = new byte[1024];
+
+				fileNameSize = fileIm.read(fileNameByte); // 파일 이름을 받음.
+
+				fileName = new String(fileNameByte, 0, fileNameSize, "UTF-8"); // Byte를
+																				// String
+																				// 형으로
+																				// 변환
+				String[] subfileName = fileName.split(".");
+				fos = con.openFileOutput(dirPath + "StTemp" + subfileName[1], Context.MODE_WORLD_READABLE);
+				bos = new BufferedOutputStream(fos); // 파일 생성
+
+				sendMessage("Size"); // Size 받기를 서버에게 알림
+
+				fileSizeByte = new byte[1024];
+				fileSize = fileIm.read(fileSizeByte);
+
+				strSize = new String(fileSizeByte, 0, fileSize, "UTF-8");
+				Log.e(TAG, "file size : " + strSize);
+				fileAllSize = Long.parseLong(strSize);
+
+				sendMessage("Ready"); // 파일 받을 준비가 됬음을 알림.
+
+				long len = 0;
+				int size = 4096;
+				byte[] data = new byte[size];
+
+				while (len != fileAllSize) {
+					int readSize = fileIm.read(data);
+					len = len + readSize;
+					bos.write(data, 0, readSize);
+					bos.flush();
+				}
+				bos.close();
+				fos.close(); // 파일닫기
+
+			}
+		} catch (IOException e) {
+			socketConnect = false;
+			Log.e(TAG, "Socket Connect Exception2 : " + e); // 소켓 IoException
+
+		} catch (Exception e) { // 소켓 Exception
+			socketConnect = false;
+			Log.e(TAG, "Exception : " + e);
+		} finally {
+			try {
+				sendMessage("quit" + "\r\n");
+				socketConnect = false;
+				MediaSocket.close();
+			} catch (IOException e) {
+				Log.e(TAG, "socket close : " + e);
+			}
+		}
+	} // end of run
+
+	public void sendMessage(String message) {
+
+		try {
+			MediaSocket.getOutputStream().write(message.getBytes());
+		} catch (IOException e) {
+			Log.e(TAG, "패킷 전송 실패." + e);
+
+		}
+	}
+
+	public void Close_Socket() {
+		try {
+			socketConnect = false;
+			sendMessage("quit" + "\r\n");
+			MediaSocket.close();
+		} catch (IOException e) {
+			Log.d(TAG, "Socket Close Failed");
+			e.printStackTrace();
+		}
+	}
+
+}
